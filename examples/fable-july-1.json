@@ -1,0 +1,47 @@
+{
+  "title_color": "#ffffff",
+  "cache_path": "~/Library/Caches/polymarket-fable-swiftbar.json",
+  "metadata_refresh_seconds": 21600,
+  "history_interval": "1d",
+  "history_fidelity": 15,
+  "show_mini_chart_on_multi_display": true,
+  "single_display_uses_short_labels": false,
+  "markets": [
+    {
+      "key": "restored_us",
+      "bar": "US-Restored",
+      "bar_short": "US-Rest",
+      "name": "US restored by July 1",
+      "question": "Will Claude Fable 5 be restored for US customers by July 1?",
+      "event_url": "https://polymarket.com/event/claude-fable-5-restored-for-us-customers-by-20260613193753196",
+      "market_slug": "will-claude-fable-5-be-restored-for-us-customers-by-july-1-20260613193829179-129-881-748-432-345",
+      "market_id": "2534929",
+      "outcome": "Yes",
+      "display_label": "US restored",
+      "end": "2026-07-01T17:00:00Z",
+      "tokens": {
+        "yes": "65981437566048290019380115403939009555261812539614875227837582433461573505957",
+        "no": "74798572054969902855685092232110006941087096918949725816611621379898608288943"
+      },
+      "color": "#34d399"
+    },
+    {
+      "key": "ban_reverted",
+      "bar": "Reverted",
+      "bar_short": "Revert",
+      "name": "Foreigner ban reverted by July 1",
+      "question": "Will the US government rescind its ban on all foreign use of Claude Fable 5 by June 30?",
+      "event_url": "https://polymarket.com/event/us-government-rescinds-claude-fable-5-foreigner-ban-by-20260613202427937",
+      "market_slug": "will-the-us-government-rescind-its-ban-on-all-foreign-use-of-claude-fable-5-by-july-1-20260613202440143",
+      "market_id": "2537527",
+      "outcome": "Yes",
+      "display_label": "ban rescinded",
+      "end": "2026-07-01T03:59:00Z",
+      "tokens": {
+        "yes": "20206262413317805354044164780650150299178310373754719434475277821055325173877",
+        "no": "62128256989742855343292430517108013606703652609597630287806933100209202797196"
+      },
+      "color": "#fbbf24"
+    }
+  ]
+}

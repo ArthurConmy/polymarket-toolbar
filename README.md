@@ -33,8 +33,8 @@ SwiftBar refreshes every 5 minutes because the plugin filename ends in `.5m.py`.
 
 ## Screenshots
 
-The committed durable example tracks Republicans 2028. The plugin can also be configured for
-short-lived, multi-market views such as the Fable July 1 markets.
+The committed durable example tracks Republicans 2028. The repo also includes
+`examples/fable-july-1.json` for a short-lived, two-market Fable view.
 
 Live Fable menu bar:
 
@@ -64,6 +64,7 @@ Republicans 2028 generated dropdown overlay chart:
 
 - `swiftbar/polymarket-toolbar.5m.py` - the SwiftBar plugin.
 - `examples/republicans-2028-presidential-election.json` - working durable example for a long-lived election market.
+- `examples/fable-july-1.json` - working two-market example for the Fable July 1 markets.
 - `config/markets.example.json` - conventional starter config shape.
 - `config/markets.json` - ignored local config for your actual markets/settings.
 - `scripts/install.sh` - copies the plugin and config into the SwiftBar plugin folder.
@@ -87,6 +88,12 @@ Reinstall with your local config:
 ```
 
 `config/markets.json` is intentionally ignored by git. Commit reusable examples, not a user's live personal config.
+
+Install the Fable July 1 example:
+
+```sh
+./scripts/install.sh --config examples/fable-july-1.json --overwrite-config
+```
 
 Minimum pulled-metadata form:
 
