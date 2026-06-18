@@ -1,0 +1,105 @@
+Polymarket Toolbar: What It Is
+================================
+
+This repository contains a configurable SwiftBar plugin for showing Polymarket probabilities in
+the macOS menu bar.
+
+The committed example tracks one durable election market:
+
+1. Republicans 2028
+   The raw Yes probability that Republicans win the 2028 US presidential election.
+
+Bigger means the named thing is more likely.
+
+Configuration Model
+-------------------
+
+The committed reusable election example lives in examples/republicans-2028-presidential-election.json.
+A user's real local config should live in config/markets.json, which is ignored by git. The repo
+also keeps config/markets.example.json as a conventional starter config.
+
+Each market can be configured in either of two ways:
+
+1. Pulled metadata
+   Provide event_url plus a selector such as market_id. The plugin fetches child-market metadata
+   from Polymarket's public Gamma API, including question text, end date, outcomes, and CLOB token
+   IDs.
+
+2. Fully pinned metadata
+   Provide token_id, question, and end directly. This avoids relying on Gamma metadata at runtime.
+
+The current example uses pulled metadata with explicit market_id selectors.
+
+Displayed Data
+--------------
+
+The menu bar title shows each market label, current midpoint probability, and a red/green move
+indicator. The move window rotates between:
+
+- 1h: change over the last hour
+- 7am: change since the most recent 7am in the user's local system timezone
+
+The dropdown includes:
+
+- One-day overlay chart with y-axis labels and tick marks
+- Current bid/ask
+- ASCII sparkline
+- Movement over 1h, since 7am, 6h, and 24h
+- Resolution countdown
+- Last fetch timestamp
+- Tracked outcome
+- Full question
+- Polymarket links
+- Config path
+
+Data Sources
+------------
+
+The plugin uses public Polymarket endpoints only. It does not authenticate, does not use wallet
+credentials, does not require KYC, and does not place trades.
+
+Metadata:
+
+- https://gamma-api.polymarket.com/events?slug=<EVENT_SLUG>
+
+Prices/history:
+
+- https://clob.polymarket.com/price?token_id=<TOKEN>&side=buy
+- https://clob.polymarket.com/price?token_id=<TOKEN>&side=sell
+- https://clob.polymarket.com/midpoint?token_id=<TOKEN>
+- https://clob.polymarket.com/prices-history?market=<TOKEN>&interval=1d&fidelity=15
+
+Related Tools
+-------------
+
+https://polymark.et/product/polymarketdash is similar, but to our understanding it does not
+allow easy customization of the always-on status bar. This project is meant to keep the status
+bar text, tracked markets, labels, colors, and movement windows easy to customize in JSON/Python.
+
+MacBook Notch Behavior
+----------------------
+
+On a MacBook display with a notch, macOS can silently place menu bar extras underneath the notch.
+The plugin can be running while not being visible. The repo includes:
+
+- scripts/apply-macbook-notch-layout.sh
+
+That script reduces status-item spacing and pins the SwiftBar item to the right side of the notch.
+
+Local-Only Repo Status
+----------------------
+
+This repo is intended to be local only for now. It should have no git remote unless one is added
+later deliberately.
+
+Git Ignore Policy
+-----------------
+
+Commit source code, scripts, docs, starter config, and reusable examples. Ignore user-local configs and runtime
+artifacts:
+
+- Commit config/markets.example.json
+- Commit reusable examples under examples/
+- Ignore config/markets.json
+- Ignore caches, logs, screenshots, generated artifacts, virtualenvs, and editor-local state
+- Do not ignore the SwiftBar plugin source in swiftbar/

@@ -1,0 +1,23 @@
+{
+  "title_color": "#ffffff",
+  "cache_path": "~/Library/Caches/polymarket-swiftbar-toolbar.json",
+  "metadata_refresh_seconds": 21600,
+  "history_interval": "1d",
+  "history_fidelity": 15,
+  "show_mini_chart_on_multi_display": true,
+  "single_display_uses_short_labels": false,
+  "title_market_limit": 1,
+  "markets": [
+    {
+      "key": "republican_2028",
+      "bar": "Republicans 2028",
+      "bar_short": "GOP 2028",
+      "name": "Republicans win 2028 US presidential election",
+      "event_url": "https://polymarket.com/event/which-party-wins-2028-us-presidential-election",
+      "market_id": "565064",
+      "outcome": "Yes",
+      "display_label": "Republican wins",
+      "color": "#f87171"
+    }
+  ]
+}
