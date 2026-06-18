@@ -33,23 +33,32 @@ SwiftBar refreshes every 5 minutes because the plugin filename ends in `.5m.py`.
 
 ## Screenshots
 
-These screenshots are from the committed durable single-market Republicans 2028 config below.
+The committed durable example tracks Republicans 2028. The plugin can also be configured for
+short-lived, multi-market views such as the Fable July 1 markets.
 
-Focused menu bar crop:
+Live Fable menu bar:
 
-![Focused menu bar crop](docs/assets/current-menubar-full.png)
+![Live Fable menu bar](docs/assets/fable-menubar-cleanshot.png)
 
-Toolbar item only:
+Live Fable dropdown:
 
-![Toolbar item only](docs/assets/current-menubar-item.png)
+![Live Fable dropdown](docs/assets/fable-dropdown-cleanshot.png)
 
-Generated overlay chart, enlarged 6x:
+Republicans 2028 focused menu bar crop:
 
-![Mini chart enlarged 6x](docs/assets/current-mini-chart.png)
+![Republicans 2028 focused menu bar crop](docs/assets/current-menubar-full.png)
 
-Generated dropdown overlay chart:
+Republicans 2028 toolbar item only:
 
-![Current overlay chart](docs/assets/current-overlay-chart.png)
+![Republicans 2028 toolbar item only](docs/assets/current-menubar-item.png)
+
+Republicans 2028 generated overlay chart, enlarged 6x:
+
+![Republicans 2028 mini chart enlarged 6x](docs/assets/current-mini-chart.png)
+
+Republicans 2028 generated dropdown overlay chart:
+
+![Republicans 2028 overlay chart](docs/assets/current-overlay-chart.png)
 
 ## Layout
 
