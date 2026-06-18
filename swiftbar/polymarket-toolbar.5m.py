@@ -628,7 +628,24 @@ def sparkline(history, width=32):
 
 
 def safe_label(text):
-    return str(text).replace("|", "/").replace("\n", " ").strip()
+    value = str(text).replace("|", "/")
+    return "".join(
+        " " if ord(char) < 32 or ord(char) == 127 else char for char in value
+    ).strip()
+
+
+def safe_swiftbar_url(value):
+    text = str(value or "").strip()
+    if not text:
+        return None
+    if "|" in text or any(
+        char.isspace() or ord(char) < 32 or ord(char) == 127 for char in text
+    ):
+        return None
+    parsed = urllib.parse.urlsplit(text)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return None
+    return text
 
 
 def parse_utc(value):
@@ -868,7 +885,11 @@ def title_for(specs, markets, config, display_count):
 
 
 def print_open_pages(specs):
-    urls = [spec["event_url"] for spec in specs if spec.get("event_url")]
+    urls = [
+        url
+        for url in (safe_swiftbar_url(spec.get("event_url")) for spec in specs)
+        if url
+    ]
     if not urls:
         return
     if len(urls) == 1:
@@ -921,11 +942,15 @@ def print_menu(specs, markets, config, config_path, errors):
         if fetched:
             fetched_text = dt.datetime.fromtimestamp(fetched).strftime("%H:%M:%S")
         status = " stale cache" if market.get("stale") else ""
+        event_url = safe_swiftbar_url(spec.get("event_url"))
+        row_options = [f"color={move_color(one_hour)}"]
+        if event_url:
+            row_options.insert(0, f"href={event_url}")
         print(
             f"{safe_label(spec['name'])}: {percent(market.get('mid'))} "
             f"{move_marker(one_hour)} {signed_pp(one_hour)} 1h, "
             f"{move_marker(since_7am)} {signed_pp(since_7am)} since 7am{status} | "
-            f"href={spec['event_url']} color={move_color(one_hour)}"
+            f"{' '.join(row_options)}"
         )
         print(f"--Bid / ask: {percent(market.get('bid'))} / {percent(market.get('ask'))}")
         print(f"--1d spark: {sparkline(market.get('history') or [])}")
@@ -935,7 +960,7 @@ def print_menu(specs, markets, config, config_path, errors):
         print(f"--Resolves in: {countdown(spec['end'])}")
         print(f"--Last fetched: {fetched_text}")
         print(
-            f"--Tracked outcome: {spec.get('display_outcome', 'Yes')} "
+            f"--Tracked outcome: {safe_label(spec.get('display_outcome', 'Yes'))} "
             f"({safe_label(spec.get('display_label', ''))})"
         )
         print(f"--Question: {safe_label(spec['question'])}")
@@ -943,7 +968,8 @@ def print_menu(specs, markets, config, config_path, errors):
             print(f"--Market ID: {safe_label(spec['market_id'])}")
         if spec.get("market_slug"):
             print(f"--Market slug: {safe_label(spec['market_slug'])}")
-        print(f"--Open Polymarket page | href={spec['event_url']}")
+        if event_url:
+            print(f"--Open Polymarket page | href={event_url}")
 
     print("---")
     print_open_pages(specs)
