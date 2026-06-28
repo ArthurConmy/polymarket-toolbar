@@ -7,6 +7,7 @@
   "show_mini_chart_on_multi_display": false,
   "single_display_uses_short_labels": true,
   "title_show_movement": false,
+  "twenty20_title_prefix": true,
   "title_market_limit": 1,
   "markets": [
     {

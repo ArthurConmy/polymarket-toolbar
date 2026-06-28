@@ -40,7 +40,6 @@ Install it locally:
 This installs:
 
 ```text
-~/Library/Application Support/SwiftBar/Plugins/twenty20-toolbar.1m.py
 ~/Library/Application Support/polymarket-toolbar/twenty20-watcher
 ~/Library/LaunchAgents/com.arthurconmy.twenty20-watcher.plist
 ~/.config/twenty20-toolbar/state.json
@@ -48,13 +47,14 @@ This installs:
 
 How it works:
 
-- The menu-bar title is a compact `20`; it is white when on pace and red when behind.
-- The SwiftBar item refreshes every minute because the plugin filename ends in `.1m.py`.
+- The visible UI is the Polymarket SwiftBar item prefixed with compact 20/20 state, for example `20 1-GOP 60%`.
+- The whole title is red when the 20/20 count is behind, and white when on pace.
+- The installer removes the old standalone `twenty20-toolbar.1m.py` status item to avoid macOS menu-bar reordering/flicker.
 - A LaunchAgent keeps a small watcher running in the background.
 - The watcher counts active Mac time today, ignoring stretches where macOS reports the machine idle for more than 5 minutes.
 - Hold F6 / Do Not Disturb for 20 seconds to register one 20/20/20.
 - After the 20 seconds completes, the watcher flashes all screens white briefly as confirmation.
-- The dropdown shows the required count, registered count, active time, idle state, event-tap status, and last observed key event.
+- The Polymarket dropdown shows the required count, registered count, active time, and idle state before the market details.
 
 The watcher may need Accessibility permission so it can listen for the F6 / Do Not Disturb key globally. If the menu says the event tap is unavailable, grant Accessibility permission to `twenty20-watcher` or to the terminal app that installed it, then rerun:
 
@@ -114,15 +114,15 @@ Republicans 2028 generated dropdown overlay chart:
 ## Layout
 
 - `swiftbar/polymarket-toolbar.5m.py` - the SwiftBar plugin.
-- `swiftbar/twenty20-toolbar.1m.py` - the 20/20/20 SwiftBar status item.
+- `swiftbar/twenty20-toolbar.1m.py` - optional standalone/debug 20/20/20 SwiftBar status item.
 - `twenty20/twenty20-watcher.swift` - the background F6 / Do Not Disturb watcher.
 - `examples/republicans-2028-presidential-election.json` - working durable example for a long-lived election market.
 - `examples/fable-july-1.json` - working two-market example for the Fable July 1 markets.
 - `config/markets.example.json` - conventional starter config shape.
 - `config/markets.json` - ignored local config for your actual markets/settings.
 - `scripts/install.sh` - copies the plugin and config into the SwiftBar plugin folder.
-- `scripts/install-twenty20.sh` - compiles and installs the 20/20/20 watcher plus SwiftBar item.
-- `scripts/uninstall-twenty20.sh` - removes the 20/20/20 watcher and SwiftBar item.
+- `scripts/install-twenty20.sh` - compiles and installs the 20/20/20 watcher.
+- `scripts/uninstall-twenty20.sh` - removes the 20/20/20 watcher and any legacy standalone status item.
 - `scripts/apply-macbook-notch-layout.sh` - applies the menu-bar spacing fix used on the MacBook display.
 - `docs/polymarket_toolbar_what_is_it.txt` - full feature explanation.
 

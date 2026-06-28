@@ -27,6 +27,7 @@ done
 launchctl bootout "gui/$UID/$label" 2>/dev/null || true
 rm -f "$launch_agent"
 rm -f "$plugin_dir/twenty20-toolbar.1m.py"
+rm -f "$plugin_dir/00-twenty20-toolbar.1m.py"
 rm -f "$app_dir/twenty20-watcher"
 
 if [[ "$remove_state" == true ]]; then

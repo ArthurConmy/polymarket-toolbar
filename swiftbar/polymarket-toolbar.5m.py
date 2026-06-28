@@ -29,6 +29,7 @@ USER_AGENT = (
 DEFAULT_CLOB = "https://clob.polymarket.com"
 DEFAULT_GAMMA = "https://gamma-api.polymarket.com"
 DEFAULT_CACHE_PATH = "~/Library/Caches/polymarket-swiftbar-toolbar.json"
+DEFAULT_TWENTY20_STATE_PATH = "~/.config/twenty20-toolbar/state.json"
 DEFAULT_TITLE_COLOR = "#ffffff"
 DEFAULT_MOVE_EPSILON = 0.0025
 DEFAULT_METADATA_REFRESH_SECONDS = 6 * 60 * 60
@@ -88,6 +89,19 @@ def load_config():
 
 def expand_path(value):
     return Path(os.path.expandvars(str(value))).expanduser()
+
+
+def load_twenty20_state(config):
+    if not config.get("twenty20_title_prefix", False):
+        return None
+    path = expand_path(config.get("twenty20_state_path", DEFAULT_TWENTY20_STATE_PATH))
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            state = json.load(handle)
+            state["_path"] = str(path)
+            return state
+    except Exception:
+        return {"missing": True, "_path": str(path)}
 
 
 def fetch_json(url, timeout=12):
@@ -495,6 +509,15 @@ def percent(value, decimals=1):
     return f"{value * 100:.{decimals}f}%"
 
 
+def human_duration(seconds):
+    seconds = max(0, int(seconds or 0))
+    hours, rem = divmod(seconds, 3600)
+    minutes = rem // 60
+    if hours:
+        return f"{hours}h {minutes}m"
+    return f"{minutes}m"
+
+
 def signed_pp(value):
     if value is None:
         return "n/a"
@@ -893,6 +916,48 @@ def title_for(specs, markets, config, display_count):
     return title
 
 
+def twenty20_status(state):
+    if not state:
+        return None
+    if state.get("missing"):
+        return {
+            "title": "20 off",
+            "color": "#f59e0b",
+            "lines": [
+                f"20/20 state missing: {safe_label(state.get('_path', 'unknown'))} | color=#f59e0b"
+            ],
+        }
+
+    required = int(state.get("required_breaks_today") or 0)
+    done = int(state.get("registered_breaks_today") or 0)
+    active = float(state.get("active_seconds_today") or 0)
+    idle = state.get("idle_seconds")
+    holding = bool(state.get("holding"))
+    hold = float(state.get("hold_seconds") or 0)
+    behind = max(0, required - done)
+    color = "#ef4444" if behind else DEFAULT_TITLE_COLOR
+    title = f"20 {int(hold)}s" if holding else "20"
+    if holding:
+        color = DEFAULT_TITLE_COLOR
+
+    lines = [
+        f"20/20: {done}/{required} registered | color={color}",
+        f"Time on computer today: {human_duration(active)}",
+        f"Needed now: floor({human_duration(active)} / 20m) = {required}",
+    ]
+    if idle is not None:
+        lines.append(f"System idle: {human_duration(float(idle))}")
+    if behind:
+        lines.append(f"Behind by {behind} 20/20/20 break(s) | color=#ef4444")
+    else:
+        lines.append("20/20 on pace | color=#10b981")
+    if state.get("last_break_at"):
+        lines.append(f"Last registered: {safe_label(state['last_break_at'])}")
+    if state.get("last_error"):
+        lines.append(f"20/20 warning: {safe_label(state['last_error'])} | color=#f59e0b")
+    return {"title": title, "color": color, "lines": lines}
+
+
 def print_open_pages(specs):
     urls = [
         url
@@ -919,6 +984,10 @@ def print_menu(specs, markets, config, config_path, errors):
         or DEFAULT_TITLE_COLOR
     )
     title = title_for(specs, markets, config, display_count)
+    twenty20 = twenty20_status(load_twenty20_state(config))
+    if twenty20:
+        title = f"{twenty20['title']} {title}"
+        title_color = twenty20["color"]
 
     image_option = ""
     if display_count > 1 and config.get("show_mini_chart_on_multi_display", True):
@@ -928,6 +997,11 @@ def print_menu(specs, markets, config, config_path, errors):
     print("---")
     if display_count <= 1:
         print(safe_label(title))
+        print("---")
+
+    if twenty20:
+        for line in twenty20["lines"]:
+            print(line)
         print("---")
 
     big_image = chart_image(

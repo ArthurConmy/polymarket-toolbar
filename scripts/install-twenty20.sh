@@ -14,11 +14,13 @@ mkdir -p "$plugin_dir" "$app_dir" "$(dirname "$state_path")" "$HOME/Library/Laun
 swiftc "$repo_dir/twenty20/twenty20-watcher.swift" -o "$binary"
 chmod +x "$binary"
 
-cp "$repo_dir/swiftbar/twenty20-toolbar.1m.py" "$plugin_dir/twenty20-toolbar.1m.py"
-chmod +x "$plugin_dir/twenty20-toolbar.1m.py"
-
-defaults write com.ameba.SwiftBar "NSStatusItem VisibleCC twenty20-toolbar.1m.py" -bool true 2>/dev/null || true
-defaults write com.ameba.SwiftBar "NSStatusItem Preferred Position twenty20-toolbar.1m.py" -int 5000 2>/dev/null || true
+# The stable UI is now the Polymarket SwiftBar item prefixed with 20/20 state.
+# Remove any standalone 20/20 status item so macOS does not reorder/flicker items.
+rm -f "$plugin_dir/twenty20-toolbar.1m.py" "$plugin_dir/00-twenty20-toolbar.1m.py"
+defaults delete com.ameba.SwiftBar "NSStatusItem VisibleCC twenty20-toolbar.1m.py" 2>/dev/null || true
+defaults delete com.ameba.SwiftBar "NSStatusItem Preferred Position twenty20-toolbar.1m.py" 2>/dev/null || true
+defaults delete com.ameba.SwiftBar "NSStatusItem VisibleCC 00-twenty20-toolbar.1m.py" 2>/dev/null || true
+defaults delete com.ameba.SwiftBar "NSStatusItem Preferred Position 00-twenty20-toolbar.1m.py" 2>/dev/null || true
 
 cat > "$launch_agent" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -50,9 +52,6 @@ launchctl bootout "gui/$UID/$label" 2>/dev/null || true
 launchctl bootstrap "gui/$UID" "$launch_agent"
 launchctl kickstart -k "gui/$UID/$label"
 
-echo "Installed 20/20/20 SwiftBar plugin:"
-echo "$plugin_dir/twenty20-toolbar.1m.py"
-echo
 echo "Installed watcher:"
 echo "$binary"
 echo
