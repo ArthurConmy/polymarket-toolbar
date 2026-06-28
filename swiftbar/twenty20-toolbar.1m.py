@@ -81,14 +81,14 @@ def watcher_running(state):
 
 def title_and_color(state):
     if not state:
-        return "20/20 watcher off", "#f59e0b"
+        return "20 off", "#f59e0b"
     required = int(state.get("required_breaks_today") or 0)
     done = int(state.get("registered_breaks_today") or 0)
     hold = float(state.get("hold_seconds") or 0)
     if state.get("holding"):
-        return f"20/20 hold {int(hold)}s", "#ffffff"
+        return f"20 {int(hold)}s", "#ffffff"
     color = "#ef4444" if done < required else "#ffffff"
-    return f"20/20 {done}/{required}", color
+    return "20", color
 
 
 def main():

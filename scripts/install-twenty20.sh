@@ -17,6 +17,9 @@ chmod +x "$binary"
 cp "$repo_dir/swiftbar/twenty20-toolbar.1m.py" "$plugin_dir/twenty20-toolbar.1m.py"
 chmod +x "$plugin_dir/twenty20-toolbar.1m.py"
 
+defaults write com.ameba.SwiftBar "NSStatusItem VisibleCC twenty20-toolbar.1m.py" -bool true 2>/dev/null || true
+defaults write com.ameba.SwiftBar "NSStatusItem Preferred Position twenty20-toolbar.1m.py" -int 0 2>/dev/null || true
+
 cat > "$launch_agent" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"

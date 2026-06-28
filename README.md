@@ -48,6 +48,7 @@ This installs:
 
 How it works:
 
+- The menu-bar title is a compact `20`; it is white when on pace and red when behind.
 - The SwiftBar item refreshes every minute because the plugin filename ends in `.1m.py`.
 - A LaunchAgent keeps a small watcher running in the background.
 - The watcher counts active Mac time today, ignoring stretches where macOS reports the machine idle for more than 5 minutes.
