@@ -14,6 +14,10 @@ if [[ -f "$repo_dir/config/markets.json" ]]; then
   config_path="$repo_dir/config/markets.json"
 fi
 python3 -m py_compile "$repo_dir/swiftbar/polymarket-toolbar.5m.py"
+python3 -m py_compile "$repo_dir/swiftbar/twenty20-toolbar.1m.py"
+bash -n "$repo_dir/scripts/install-twenty20.sh"
+bash -n "$repo_dir/scripts/uninstall-twenty20.sh"
+swiftc "$repo_dir/twenty20/twenty20-watcher.swift" -o "${TMPDIR:-/tmp}/twenty20-watcher-validate"
 
 REPO_DIR="$repo_dir" python3 - <<'PY'
 import contextlib
@@ -81,5 +85,41 @@ assert "Yes / bash=/bin/bash" in output
 assert "bad/label" in output
 PY
 
+tmp_twenty20_state="$(mktemp)"
+cat > "$tmp_twenty20_state" <<'JSON'
+{
+  "date": "2026-06-28",
+  "active_seconds_today": 1200,
+  "registered_breaks_today": 0,
+  "required_breaks_today": 1,
+  "last_break_at": null,
+  "last_updated_at": "2026-06-28T12:00:00Z",
+  "watcher_pid": 1,
+  "holding": false,
+  "hold_started_at": null,
+  "hold_seconds": 0,
+  "idle_seconds": 0,
+  "counting_active_time": true,
+  "event_tap_enabled": true,
+  "accessibility_trusted": true,
+  "last_event": "bad | bash=/bin/bash param1=-c",
+  "last_error": "also bad | terminal=false"
+}
+JSON
+twenty20_output="$(TWENTY20_STATE_PATH="$tmp_twenty20_state" "$repo_dir/swiftbar/twenty20-toolbar.1m.py")"
+rm -f "$tmp_twenty20_state"
+TWENTY20_OUTPUT="$twenty20_output" python3 - <<'PY'
+import os
+
+output = os.environ["TWENTY20_OUTPUT"]
+param_regions = [line.split("|", 1)[1] for line in output.splitlines() if "|" in line]
+for params in param_regions:
+    assert "bash=/bin/bash" not in params, params
+    assert "param1=-c" not in params, params
+PY
+
 POLYMARKET_SWIFTBAR_CONFIG="$config_path" \
   "$repo_dir/swiftbar/polymarket-toolbar.5m.py" | sed -n '1,12p'
+
+TWENTY20_STATE_PATH=/tmp/twenty20-missing.json \
+  "$repo_dir/swiftbar/twenty20-toolbar.1m.py" | sed -n '1,8p'
