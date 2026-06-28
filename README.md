@@ -53,6 +53,7 @@ How it works:
 - A LaunchAgent keeps a small watcher running in the background.
 - The watcher counts active Mac time today, ignoring stretches where macOS reports the machine idle for more than 5 minutes.
 - Hold F6 / Do Not Disturb for 20 seconds to register one 20/20/20.
+- The watcher claims recognized F6 / Focus key events with an active macOS event tap, so the held key should not toggle the system Focus/DnD state.
 - After the 20 seconds completes, the watcher flashes all screens white briefly as confirmation.
 - The Polymarket dropdown shows the required count, registered count, active time, and idle state before the market details.
 
@@ -60,6 +61,12 @@ The watcher may need Accessibility permission so it can listen for the F6 / Do N
 
 ```sh
 ./scripts/install-twenty20.sh
+```
+
+If F6 still toggles Focus/DnD, click the toolbar item after pressing F6 once and look for `Last event: systemDefined keyType=N ...`. Then reinstall with that key type pinned:
+
+```sh
+TWENTY20_SYSTEM_KEY_TYPES=N ./scripts/install-twenty20.sh
 ```
 
 Uninstall the 20/20/20 extension:

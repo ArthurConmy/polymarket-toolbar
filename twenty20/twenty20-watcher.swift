@@ -219,7 +219,9 @@ final class Twenty20Watcher {
         let callback: CGEventTapCallBack = { _, type, event, refcon in
             guard let refcon else { return Unmanaged.passUnretained(event) }
             let watcher = Unmanaged<Twenty20Watcher>.fromOpaque(refcon).takeUnretainedValue()
-            watcher.handleEvent(type: type, event: event)
+            if watcher.handleEvent(type: type, event: event) {
+                return nil
+            }
             return Unmanaged.passUnretained(event)
         }
 
@@ -227,7 +229,7 @@ final class Twenty20Watcher {
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
             place: .headInsertEventTap,
-            options: .listenOnly,
+            options: .defaultTap,
             eventsOfInterest: CGEventMask(mask),
             callback: callback,
             userInfo: refcon
@@ -247,7 +249,7 @@ final class Twenty20Watcher {
         save()
     }
 
-    private func handleEvent(type: CGEventType, event: CGEvent) {
+    private func handleEvent(type: CGEventType, event: CGEvent) -> Bool {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
             if let eventTap {
                 CGEvent.tapEnable(tap: eventTap, enable: true)
@@ -255,7 +257,7 @@ final class Twenty20Watcher {
             state.eventTapEnabled = true
             state.lastEvent = "event tap re-enabled"
             save()
-            return
+            return false
         }
 
         if type == .keyDown || type == .keyUp {
@@ -266,13 +268,14 @@ final class Twenty20Watcher {
                 } else {
                     endHold(source: "keycode:f6")
                 }
+                return suppressF6SystemAction()
             }
-            return
+            return false
         }
 
         guard type.rawValue == systemDefinedEventTypeRawValue,
               let nsEvent = NSEvent(cgEvent: event) else {
-            return
+            return false
         }
 
         let data = nsEvent.data1
@@ -287,8 +290,20 @@ final class Twenty20Watcher {
             } else if keyState == 0x0B {
                 endHold(source: "system:\(keyType)")
             }
+            save()
+            return suppressF6SystemAction()
         }
         save()
+        return false
+    }
+
+    private func suppressF6SystemAction() -> Bool {
+        let configured = ProcessInfo.processInfo.environment["TWENTY20_SUPPRESS_F6_SYSTEM"]
+        if let configured {
+            let value = configured.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            return !["0", "false", "no", "off"].contains(value)
+        }
+        return true
     }
 
     private func isDndOrF6SystemKey(_ keyType: Int) -> Bool {
