@@ -63,6 +63,9 @@ mkdir -p "$(dirname "$config_path")"
 cp "$repo_dir/swiftbar/polymarket-toolbar.5m.py" "$plugin_dir/$plugin_name"
 chmod +x "$plugin_dir/$plugin_name"
 
+defaults write com.ameba.SwiftBar "NSStatusItem VisibleCC $plugin_name" -bool true 2>/dev/null || true
+defaults write com.ameba.SwiftBar "NSStatusItem Preferred Position $plugin_name" -int 3000 2>/dev/null || true
+
 if [[ "$overwrite_config" == true || ! -f "$config_path" ]]; then
   cp "$config_source" "$config_path"
 fi

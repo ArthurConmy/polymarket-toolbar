@@ -2,7 +2,7 @@
 
 Configurable macOS menu-bar monitor for Polymarket probabilities.
 
-The repo packages a SwiftBar plugin for tracking one or more Polymarket outcomes. The committed example tracks the probability that Republicans win the 2028 US presidential election. A market entry can either provide a direct `token_id`, or provide a Polymarket `event_url` plus a child-market selector such as `market_id`; the plugin then pulls the child market metadata from Polymarket's public Gamma API and uses the CLOB API for current prices/history.
+The repo packages a SwiftBar plugin for tracking one or more Polymarket outcomes. The committed example tracks `1 - P(Republicans win the 2028 US presidential election)`. A market entry can either provide a direct `token_id`, or provide a Polymarket `event_url` plus a child-market selector such as `market_id`; the plugin then pulls the child market metadata from Polymarket's public Gamma API and uses the CLOB API for current prices/history.
 
 ## Quick Start
 
@@ -14,7 +14,7 @@ cd polymarket-toolbar
 ./scripts/install.sh
 ```
 
-The install script copies the SwiftBar plugin and the default Republicans 2028 example config into place:
+The install script copies the SwiftBar plugin and the default inverse-Republicans 2028 example config into place:
 
 ```text
 ~/Library/Application Support/SwiftBar/Plugins/polymarket-toolbar.5m.py
@@ -84,7 +84,7 @@ Remove its saved state too:
 
 ## Screenshots
 
-The committed durable example tracks Republicans 2028. The repo also includes
+The committed durable example tracks `1 - P(Republicans 2028)`. The repo also includes
 `examples/fable-july-1.json` for a short-lived, two-market Fable view.
 
 Live Fable menu bar:
@@ -154,15 +154,15 @@ Minimum pulled-metadata form:
 
 ```json
 {
-  "key": "republican_2028",
-  "bar": "Republicans 2028",
-  "bar_short": "GOP 2028",
-  "name": "Republicans win 2028 US presidential election",
+  "key": "not_republican_2028",
+  "bar": "1-GOP",
+  "bar_short": "1-GOP",
+  "name": "1 - P(Republicans win 2028 US presidential election)",
   "event_url": "https://polymarket.com/event/which-party-wins-2028-us-presidential-election",
   "market_id": "565064",
-  "outcome": "Yes",
-  "display_label": "Republican wins",
-  "color": "#f87171"
+  "outcome": "No",
+  "display_label": "Republicans do not win",
+  "color": "#60a5fa"
 }
 ```
 

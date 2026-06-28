@@ -860,9 +860,11 @@ def fetch_all(specs, config, cache):
     return display, errors, fresh_count
 
 
-def title_piece(spec, market, window, short=False):
+def title_piece(spec, market, window, short=False, show_movement=True):
     label = spec["bar_short"] if short else spec["bar"]
-    return f"{label} {percent(market.get('mid'), 0)} {title_marker(market, window)}"
+    if show_movement:
+        return f"{label} {percent(market.get('mid'), 0)} {title_marker(market, window)}"
+    return f"{label} {percent(market.get('mid'), 0)}"
 
 
 def title_for(specs, markets, config, display_count):
@@ -872,8 +874,15 @@ def title_for(specs, markets, config, display_count):
     if display_count <= 1 and config.get("single_display_uses_short_labels", False):
         use_short = True
     max_markets = int(config.get("title_market_limit", len(specs)))
+    show_movement = config.get("title_show_movement", True)
     pieces = [
-        title_piece(spec, markets.get(spec["key"], {}), window, short=use_short)
+        title_piece(
+            spec,
+            markets.get(spec["key"], {}),
+            window,
+            short=use_short,
+            show_movement=show_movement,
+        )
         for spec in specs[:max_markets]
     ]
     title = "  ".join(pieces)

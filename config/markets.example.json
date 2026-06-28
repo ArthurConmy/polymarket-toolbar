@@ -4,20 +4,21 @@
   "metadata_refresh_seconds": 21600,
   "history_interval": "1d",
   "history_fidelity": 15,
-  "show_mini_chart_on_multi_display": true,
-  "single_display_uses_short_labels": false,
+  "show_mini_chart_on_multi_display": false,
+  "single_display_uses_short_labels": true,
+  "title_show_movement": false,
   "title_market_limit": 1,
   "markets": [
     {
-      "key": "republican_2028",
-      "bar": "Republicans 2028",
-      "bar_short": "GOP 2028",
-      "name": "Republicans win 2028 US presidential election",
+      "key": "not_republican_2028",
+      "bar": "1-GOP",
+      "bar_short": "1-GOP",
+      "name": "1 - P(Republicans win 2028 US presidential election)",
       "event_url": "https://polymarket.com/event/which-party-wins-2028-us-presidential-election",
       "market_id": "565064",
-      "outcome": "Yes",
-      "display_label": "Republican wins",
-      "color": "#f87171"
+      "outcome": "No",
+      "display_label": "Republicans do not win",
+      "color": "#60a5fa"
     }
   ]
 }
