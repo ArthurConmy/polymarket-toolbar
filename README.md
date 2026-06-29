@@ -40,7 +40,7 @@ Install it locally:
 This installs:
 
 ```text
-~/Library/Application Support/polymarket-toolbar/twenty20-watcher
+~/Applications/Twenty20 Watcher.app
 ~/Library/LaunchAgents/com.arthurconmy.twenty20-watcher.plist
 ~/.config/twenty20-toolbar/state.json
 ```
@@ -52,17 +52,23 @@ How it works:
 - The installer removes the old standalone `twenty20-toolbar.1m.py` status item to avoid macOS menu-bar reordering/flicker.
 - A LaunchAgent keeps a small watcher running in the background.
 - The watcher counts active Mac time today, ignoring stretches where macOS reports the machine idle for more than 5 minutes.
-- Hold Right Option for 20 seconds to register one 20/20/20.
+- Hold the configured break key for 20 seconds to register one 20/20/20. By default this is Right Option, reported by macOS as keyCode `61`.
 - After the 20 seconds completes, the watcher flashes all screens white briefly as confirmation.
 - The Polymarket dropdown shows the required count, registered count, active time, and idle state before the market details.
 
-The watcher may need Accessibility permission so it can listen for Right Option globally. If the menu says the event tap is unavailable, grant Accessibility permission to the installed `twenty20-watcher` binary:
+To accept a different modifier key code, set `TWENTY20_HOLD_KEY_CODES` during install. For example, this accepts both Right Option and keyCode `56`:
 
 ```sh
-open -R "$HOME/Library/Application Support/polymarket-toolbar/twenty20-watcher"
+TWENTY20_HOLD_KEY_CODES=61,56 ./scripts/install-twenty20.sh
 ```
 
-In System Settings > Privacy & Security > Accessibility, remove any old `twenty20-watcher` row, add the revealed binary again, and enable it. Then restart the watcher without rebuilding it:
+The watcher may need Accessibility permission so it can listen for the hold key globally. It checks this silently and does not open the macOS permission prompt itself. If the menu says the event tap is unavailable, grant Accessibility permission to the installed app:
+
+```sh
+open -R "$HOME/Applications/Twenty20 Watcher.app"
+```
+
+In System Settings > Privacy & Security > Accessibility, remove any old `twenty20-watcher` row, add the revealed `Twenty20 Watcher.app`, and enable it. Then restart the watcher without rebuilding it:
 
 ```sh
 launchctl kickstart -k "gui/$UID/com.arthurconmy.twenty20-watcher"
@@ -121,7 +127,7 @@ Republicans 2028 generated dropdown overlay chart:
 
 - `swiftbar/polymarket-toolbar.5m.py` - the SwiftBar plugin.
 - `swiftbar/twenty20-toolbar.1m.py` - optional standalone/debug 20/20/20 SwiftBar status item.
-- `twenty20/twenty20-watcher.swift` - the background Right Option hold watcher.
+- `twenty20/twenty20-watcher.swift` - the background configurable modifier hold watcher.
 - `examples/republicans-2028-presidential-election.json` - working durable example for a long-lived election market.
 - `examples/fable-july-1.json` - working two-market example for the Fable July 1 markets.
 - `config/markets.example.json` - conventional starter config shape.

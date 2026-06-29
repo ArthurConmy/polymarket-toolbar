@@ -953,6 +953,9 @@ def twenty20_status(state):
         lines.append("20/20 on pace | color=#10b981")
     if state.get("last_break_at"):
         lines.append(f"Last registered: {safe_label(state['last_break_at'])}")
+    if state.get("hold_key_codes"):
+        codes = ", ".join(str(code) for code in state["hold_key_codes"])
+        lines.append(f"Hold key codes: {safe_label(codes)}")
     if state.get("last_event"):
         lines.append(f"Last event: {safe_label(state['last_event'])}")
     if state.get("last_error"):

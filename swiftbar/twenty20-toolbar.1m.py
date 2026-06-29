@@ -123,7 +123,10 @@ def main():
         print(f"Accessibility trusted: {'yes' if state.get('accessibility_trusted') else 'no'}")
         print(f"Event tap enabled: {'yes' if state.get('event_tap_enabled') else 'no'}")
         if state.get("holding"):
-            print(f"Holding Right Option: {float(state.get('hold_seconds') or 0):.1f}s")
+            print(f"Holding break key: {float(state.get('hold_seconds') or 0):.1f}s")
+        if state.get("hold_key_codes"):
+            codes = ", ".join(str(code) for code in state["hold_key_codes"])
+            print(f"Hold key codes: {safe_label(codes)}")
         if state.get("last_event"):
             print(f"Last event: {safe_label(state['last_event'])}")
         if state.get("last_error"):

@@ -4,7 +4,7 @@ import Foundation
 import IOKit
 
 private let defaultStatePath = ("~/.config/twenty20-toolbar/state.json" as NSString).expandingTildeInPath
-private let rightOptionVirtualKeyCode: Int64 = 61
+private let defaultHoldKeyCodes: Set<Int64> = [61]
 private let holdTargetSeconds = 20.0
 private let activeBucketSeconds = 20.0 * 60.0
 private let idleCutoffSeconds = 5.0 * 60.0
@@ -24,6 +24,7 @@ struct State: Codable {
     var countingActiveTime: Bool?
     var eventTapEnabled: Bool
     var accessibilityTrusted: Bool
+    var holdKeyCodes: [Int64]?
     var lastEvent: String?
     var lastError: String?
 
@@ -42,6 +43,7 @@ struct State: Codable {
         case countingActiveTime = "counting_active_time"
         case eventTapEnabled = "event_tap_enabled"
         case accessibilityTrusted = "accessibility_trusted"
+        case holdKeyCodes = "hold_key_codes"
         case lastEvent = "last_event"
         case lastError = "last_error"
     }
@@ -59,9 +61,13 @@ final class Twenty20Watcher {
     private var registeredThisHold = false
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
+    private let holdKeyCodes: Set<Int64>
 
     init(statePath: String) {
         stateURL = URL(fileURLWithPath: (statePath as NSString).expandingTildeInPath)
+        holdKeyCodes = Twenty20Watcher.parseHoldKeyCodes(
+            ProcessInfo.processInfo.environment["TWENTY20_HOLD_KEY_CODES"]
+        )
         isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         dayFormatter = DateFormatter()
@@ -116,9 +122,27 @@ final class Twenty20Watcher {
             countingActiveTime: true,
             eventTapEnabled: false,
             accessibilityTrusted: AXIsProcessTrusted(),
+            holdKeyCodes: nil,
             lastEvent: nil,
             lastError: nil
         )
+    }
+
+    private static func parseHoldKeyCodes(_ raw: String?) -> Set<Int64> {
+        guard let raw else {
+            return defaultHoldKeyCodes
+        }
+        let parsed = raw
+            .split(separator: ",")
+            .compactMap { Int64(String($0).trimmingCharacters(in: .whitespacesAndNewlines)) }
+        if parsed.isEmpty {
+            return defaultHoldKeyCodes
+        }
+        return Set(parsed)
+    }
+
+    private func holdKeyCodeList() -> String {
+        holdKeyCodes.sorted().map(String.init).joined(separator: ",")
     }
 
     private func todayString() -> String {
@@ -146,6 +170,7 @@ final class Twenty20Watcher {
         state.requiredBreaksToday = Int(floor(state.activeSecondsToday / activeBucketSeconds))
         state.watcherPID = getpid()
         state.accessibilityTrusted = AXIsProcessTrusted()
+        state.holdKeyCodes = holdKeyCodes.sorted()
         state.lastUpdatedAt = nowString()
     }
 
@@ -207,8 +232,8 @@ final class Twenty20Watcher {
     }
 
     private func setupEventTap() {
-        let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
-        _ = AXIsProcessTrustedWithOptions(options)
+        let accessibilityTrusted = AXIsProcessTrusted()
+        state.accessibilityTrusted = accessibilityTrusted
 
         let mask = 1 << CGEventType.flagsChanged.rawValue
 
@@ -229,7 +254,11 @@ final class Twenty20Watcher {
             userInfo: refcon
         ) else {
             state.eventTapEnabled = false
-            state.lastError = "Event tap unavailable. Grant Accessibility permission to the watcher or Terminal, then restart."
+            if accessibilityTrusted {
+                state.lastError = "Event tap unavailable. Restart the watcher or reinstall the 20/20 extension."
+            } else {
+                state.lastError = "Accessibility permission missing for Twenty20 Watcher.app."
+            }
             save()
             return
         }
@@ -239,9 +268,24 @@ final class Twenty20Watcher {
         CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
         state.eventTapEnabled = true
-        state.lastError = nil
-        state.lastEvent = "watching right-option keyCode=\(rightOptionVirtualKeyCode)"
+        state.lastError = accessibilityTrusted ? nil : "Accessibility permission missing for Twenty20 Watcher.app."
+        state.lastEvent = "watching hold keyCodes=\(holdKeyCodeList())"
         save()
+    }
+
+    private func modifierMask(for keyCode: Int64) -> CGEventFlags? {
+        switch keyCode {
+        case 56, 60:
+            return .maskShift
+        case 58, 61:
+            return .maskAlternate
+        case 59, 62:
+            return .maskControl
+        case 54, 55:
+            return .maskCommand
+        default:
+            return nil
+        }
     }
 
     private func handleEvent(type: CGEventType, event: CGEvent) {
@@ -261,11 +305,16 @@ final class Twenty20Watcher {
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
         state.lastEvent = "flagsChanged keyCode=\(keyCode) flags=\(event.flags.rawValue)"
 
-        if keyCode == rightOptionVirtualKeyCode {
-            if event.flags.contains(.maskAlternate) {
-                beginHold(source: "right-option")
+        if holdKeyCodes.contains(keyCode) {
+            let source = "hold keyCode \(keyCode)"
+            if let mask = modifierMask(for: keyCode) {
+                if event.flags.contains(mask) {
+                    beginHold(source: source)
+                } else {
+                    endHold(source: source)
+                }
             } else {
-                endHold(source: "right-option")
+                beginHold(source: source)
             }
         }
         save()
