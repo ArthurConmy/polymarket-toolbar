@@ -227,7 +227,7 @@ final class Twenty20Watcher {
 
         let refcon = Unmanaged.passUnretained(self).toOpaque()
         guard let tap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
+            tap: .cghidEventTap,
             place: .headInsertEventTap,
             options: .defaultTap,
             eventsOfInterest: CGEventMask(mask),
@@ -284,7 +284,7 @@ final class Twenty20Watcher {
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
         state.lastEvent = "systemDefined keyType=\(keyType) keyState=\(keyState) keyCode=\(keyCode)"
 
-        if keyCode == f6VirtualKeyCode || isDndOrF6SystemKey(keyType) {
+        if isClaimedSystemKey(keyType: keyType, keyState: keyState, keyCode: keyCode) {
             if keyState == 0x0A {
                 beginHold(source: "system:\(keyType)")
             } else if keyState == 0x0B {
@@ -306,7 +306,11 @@ final class Twenty20Watcher {
         return true
     }
 
-    private func isDndOrF6SystemKey(_ keyType: Int) -> Bool {
+    private func isClaimedSystemKey(keyType: Int, keyState: Int, keyCode: Int64) -> Bool {
+        if keyCode == f6VirtualKeyCode {
+            return true
+        }
+
         let configured = ProcessInfo.processInfo.environment["TWENTY20_SYSTEM_KEY_TYPES"] ?? ""
         let configuredTypes = configured
             .split(separator: ",")
@@ -317,7 +321,14 @@ final class Twenty20Watcher {
 
         // F6 is reported as virtual keycode 97 on normal function-key events.
         // On Apple keyboards in special-key mode it is commonly an illumination toggle.
-        return keyType == 23
+        if keyType == 23 {
+            return true
+        }
+
+        // On Arthur's current MacBook, the Focus/DnD key has been observed as
+        // a system-defined pulse with keyType=0 and keyState=0. Do not claim
+        // normal keyType=0 down/up events, because those are volume-up on many Macs.
+        return keyType == 0 && keyState == 0
     }
 
     private func beginHold(source: String) {

@@ -53,7 +53,8 @@ How it works:
 - A LaunchAgent keeps a small watcher running in the background.
 - The watcher counts active Mac time today, ignoring stretches where macOS reports the machine idle for more than 5 minutes.
 - Hold F6 / Do Not Disturb for 20 seconds to register one 20/20/20.
-- The watcher claims recognized F6 / Focus key events with an active macOS event tap, so the held key should not toggle the system Focus/DnD state.
+- The watcher claims recognized F6 / Focus key events with an active HID-level macOS event tap, so the held key should not toggle the system Focus/DnD state.
+- On the current MacBook, Focus/DnD has been observed as `systemDefined keyType=0 keyState=0`; that exact pulse is claimed without blocking normal volume-up down/up events.
 - After the 20 seconds completes, the watcher flashes all screens white briefly as confirmation.
 - The Polymarket dropdown shows the required count, registered count, active time, and idle state before the market details.
 
