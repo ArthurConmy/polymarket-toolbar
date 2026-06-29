@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+  echo "Do not run this installer with sudo." >&2
+  echo "This is a per-user LaunchAgent and must be installed from the normal user shell." >&2
+  exit 2
+fi
+
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 plugin_dir="${SWIFTBAR_PLUGIN_DIR:-$HOME/Library/Application Support/SwiftBar/Plugins}"
 app_dir="${TWENTY20_APP_DIR:-$HOME/Library/Application Support/polymarket-toolbar}"
@@ -18,6 +24,7 @@ xml_escape() {
 
 mkdir -p "$plugin_dir" "$app_dir" "$(dirname "$state_path")" "$HOME/Library/LaunchAgents" "$HOME/Library/Logs"
 
+rm -f "$binary"
 swiftc "$repo_dir/twenty20/twenty20-watcher.swift" -o "$binary"
 codesign --force --sign - --identifier "$label" "$binary" >/dev/null 2>&1 || true
 chmod +x "$binary"
