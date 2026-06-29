@@ -4,8 +4,7 @@ import Foundation
 import IOKit
 
 private let defaultStatePath = ("~/.config/twenty20-toolbar/state.json" as NSString).expandingTildeInPath
-private let f6VirtualKeyCode: Int64 = 97
-private let systemDefinedEventTypeRawValue: UInt32 = 14
+private let rightOptionVirtualKeyCode: Int64 = 61
 private let holdTargetSeconds = 20.0
 private let activeBucketSeconds = 20.0 * 60.0
 private let idleCutoffSeconds = 5.0 * 60.0
@@ -211,31 +210,26 @@ final class Twenty20Watcher {
         let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
         _ = AXIsProcessTrustedWithOptions(options)
 
-        let mask =
-            (1 << CGEventType.keyDown.rawValue)
-            | (1 << CGEventType.keyUp.rawValue)
-            | (1 << systemDefinedEventTypeRawValue)
+        let mask = 1 << CGEventType.flagsChanged.rawValue
 
         let callback: CGEventTapCallBack = { _, type, event, refcon in
             guard let refcon else { return Unmanaged.passUnretained(event) }
             let watcher = Unmanaged<Twenty20Watcher>.fromOpaque(refcon).takeUnretainedValue()
-            if watcher.handleEvent(type: type, event: event) {
-                return nil
-            }
+            watcher.handleEvent(type: type, event: event)
             return Unmanaged.passUnretained(event)
         }
 
         let refcon = Unmanaged.passUnretained(self).toOpaque()
         guard let tap = CGEvent.tapCreate(
-            tap: .cghidEventTap,
+            tap: .cgSessionEventTap,
             place: .headInsertEventTap,
-            options: .defaultTap,
+            options: .listenOnly,
             eventsOfInterest: CGEventMask(mask),
             callback: callback,
             userInfo: refcon
         ) else {
             state.eventTapEnabled = false
-            state.lastError = "Event tap unavailable. Grant Accessibility permission to the watcher or Terminal, then reinstall/restart."
+            state.lastError = "Event tap unavailable. Grant Accessibility permission to the watcher or Terminal, then restart."
             save()
             return
         }
@@ -246,10 +240,11 @@ final class Twenty20Watcher {
         CGEvent.tapEnable(tap: tap, enable: true)
         state.eventTapEnabled = true
         state.lastError = nil
+        state.lastEvent = "watching right-option keyCode=\(rightOptionVirtualKeyCode)"
         save()
     }
 
-    private func handleEvent(type: CGEventType, event: CGEvent) -> Bool {
+    private func handleEvent(type: CGEventType, event: CGEvent) {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
             if let eventTap {
                 CGEvent.tapEnable(tap: eventTap, enable: true)
@@ -257,78 +252,23 @@ final class Twenty20Watcher {
             state.eventTapEnabled = true
             state.lastEvent = "event tap re-enabled"
             save()
-            return false
+            return
         }
 
-        if type == .keyDown || type == .keyUp {
-            let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
-            if keyCode == f6VirtualKeyCode {
-                if type == .keyDown {
-                    beginHold(source: "keycode:f6")
-                } else {
-                    endHold(source: "keycode:f6")
-                }
-                return suppressF6SystemAction()
-            }
-            return false
+        guard type == .flagsChanged else {
+            return
         }
-
-        guard type.rawValue == systemDefinedEventTypeRawValue,
-              let nsEvent = NSEvent(cgEvent: event) else {
-            return false
-        }
-
-        let data = nsEvent.data1
-        let keyType = Int((data & 0xFFFF0000) >> 16)
-        let keyState = Int((data & 0x0000FF00) >> 8)
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
-        state.lastEvent = "systemDefined keyType=\(keyType) keyState=\(keyState) keyCode=\(keyCode)"
+        state.lastEvent = "flagsChanged keyCode=\(keyCode) flags=\(event.flags.rawValue)"
 
-        if isClaimedSystemKey(keyType: keyType, keyState: keyState, keyCode: keyCode) {
-            if keyState == 0x0A {
-                beginHold(source: "system:\(keyType)")
-            } else if keyState == 0x0B {
-                endHold(source: "system:\(keyType)")
+        if keyCode == rightOptionVirtualKeyCode {
+            if event.flags.contains(.maskAlternate) {
+                beginHold(source: "right-option")
+            } else {
+                endHold(source: "right-option")
             }
-            save()
-            return suppressF6SystemAction()
         }
         save()
-        return false
-    }
-
-    private func suppressF6SystemAction() -> Bool {
-        let configured = ProcessInfo.processInfo.environment["TWENTY20_SUPPRESS_F6_SYSTEM"]
-        if let configured {
-            let value = configured.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            return !["0", "false", "no", "off"].contains(value)
-        }
-        return true
-    }
-
-    private func isClaimedSystemKey(keyType: Int, keyState: Int, keyCode: Int64) -> Bool {
-        if keyCode == f6VirtualKeyCode {
-            return true
-        }
-
-        let configured = ProcessInfo.processInfo.environment["TWENTY20_SYSTEM_KEY_TYPES"] ?? ""
-        let configuredTypes = configured
-            .split(separator: ",")
-            .compactMap { Int($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
-        if configuredTypes.contains(keyType) {
-            return true
-        }
-
-        // F6 is reported as virtual keycode 97 on normal function-key events.
-        // On Apple keyboards in special-key mode it is commonly an illumination toggle.
-        if keyType == 23 {
-            return true
-        }
-
-        // On Arthur's current MacBook, the Focus/DnD key has been observed as
-        // a system-defined pulse with keyType=0 and keyState=0. Do not claim
-        // normal keyType=0 down/up events, because those are volume-up on many Macs.
-        return keyType == 0 && keyState == 0
     }
 
     private func beginHold(source: String) {

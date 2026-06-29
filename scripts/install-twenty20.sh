@@ -14,13 +14,6 @@ state_path="${TWENTY20_STATE_PATH:-$HOME/.config/twenty20-toolbar/state.json}"
 launch_agent="$HOME/Library/LaunchAgents/com.arthurconmy.twenty20-watcher.plist"
 binary="$app_dir/twenty20-watcher"
 label="com.arthurconmy.twenty20-watcher"
-suppress_f6_system="${TWENTY20_SUPPRESS_F6_SYSTEM:-true}"
-system_key_types="${TWENTY20_SYSTEM_KEY_TYPES:-}"
-
-xml_escape() {
-  printf '%s' "$1" \
-    | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/"/\&quot;/g'
-}
 
 source_file="$repo_dir/twenty20/twenty20-watcher.swift"
 
@@ -59,13 +52,6 @@ cat > "$launch_agent" <<PLIST
   <true/>
   <key>KeepAlive</key>
   <true/>
-  <key>EnvironmentVariables</key>
-  <dict>
-    <key>TWENTY20_SUPPRESS_F6_SYSTEM</key>
-    <string>$(xml_escape "$suppress_f6_system")</string>
-    <key>TWENTY20_SYSTEM_KEY_TYPES</key>
-    <string>$(xml_escape "$system_key_types")</string>
-  </dict>
   <key>StandardOutPath</key>
   <string>$HOME/Library/Logs/twenty20-watcher.out.log</string>
   <key>StandardErrorPath</key>
@@ -87,6 +73,6 @@ echo
 echo "State file:"
 echo "$state_path"
 echo
-echo "If F6 is not detected, grant Accessibility permission to twenty20-watcher"
+echo "If Right Option is not detected, grant Accessibility permission to twenty20-watcher"
 echo "or to the terminal app that installed it, then restart the watcher:"
 echo "launchctl kickstart -k gui/$UID/$label"

@@ -52,13 +52,11 @@ How it works:
 - The installer removes the old standalone `twenty20-toolbar.1m.py` status item to avoid macOS menu-bar reordering/flicker.
 - A LaunchAgent keeps a small watcher running in the background.
 - The watcher counts active Mac time today, ignoring stretches where macOS reports the machine idle for more than 5 minutes.
-- Hold F6 / Do Not Disturb for 20 seconds to register one 20/20/20.
-- The watcher claims recognized F6 / Focus key events with an active HID-level macOS event tap, so the held key should not toggle the system Focus/DnD state.
-- On the current MacBook, Focus/DnD has been observed as `systemDefined keyType=0 keyState=0`; that exact pulse is claimed without blocking normal volume-up down/up events.
+- Hold Right Option for 20 seconds to register one 20/20/20.
 - After the 20 seconds completes, the watcher flashes all screens white briefly as confirmation.
 - The Polymarket dropdown shows the required count, registered count, active time, and idle state before the market details.
 
-The watcher may need Accessibility permission so it can listen for the F6 / Do Not Disturb key globally. If the menu says the event tap is unavailable, grant Accessibility permission to the installed `twenty20-watcher` binary:
+The watcher may need Accessibility permission so it can listen for Right Option globally. If the menu says the event tap is unavailable, grant Accessibility permission to the installed `twenty20-watcher` binary:
 
 ```sh
 open -R "$HOME/Library/Application Support/polymarket-toolbar/twenty20-watcher"
@@ -68,12 +66,6 @@ In System Settings > Privacy & Security > Accessibility, remove any old `twenty2
 
 ```sh
 launchctl kickstart -k "gui/$UID/com.arthurconmy.twenty20-watcher"
-```
-
-If F6 still toggles Focus/DnD, click the toolbar item after pressing F6 once and look for `Last event: systemDefined keyType=N ...`. Then reinstall with that key type pinned:
-
-```sh
-TWENTY20_SYSTEM_KEY_TYPES=N ./scripts/install-twenty20.sh
 ```
 
 Uninstall the 20/20/20 extension:
@@ -129,7 +121,7 @@ Republicans 2028 generated dropdown overlay chart:
 
 - `swiftbar/polymarket-toolbar.5m.py` - the SwiftBar plugin.
 - `swiftbar/twenty20-toolbar.1m.py` - optional standalone/debug 20/20/20 SwiftBar status item.
-- `twenty20/twenty20-watcher.swift` - the background F6 / Do Not Disturb watcher.
+- `twenty20/twenty20-watcher.swift` - the background Right Option hold watcher.
 - `examples/republicans-2028-presidential-election.json` - working durable example for a long-lived election market.
 - `examples/fable-july-1.json` - working two-market example for the Fable July 1 markets.
 - `config/markets.example.json` - conventional starter config shape.
