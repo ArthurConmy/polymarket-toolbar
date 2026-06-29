@@ -22,12 +22,16 @@ xml_escape() {
     | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/"/\&quot;/g'
 }
 
+source_file="$repo_dir/twenty20/twenty20-watcher.swift"
+
 mkdir -p "$plugin_dir" "$app_dir" "$(dirname "$state_path")" "$HOME/Library/LaunchAgents" "$HOME/Library/Logs"
 
-rm -f "$binary"
-swiftc "$repo_dir/twenty20/twenty20-watcher.swift" -o "$binary"
-codesign --force --sign - --identifier "$label" "$binary" >/dev/null 2>&1 || true
-chmod +x "$binary"
+if [[ ! -x "$binary" || "$source_file" -nt "$binary" ]]; then
+  rm -f "$binary"
+  swiftc "$source_file" -o "$binary"
+  codesign --force --sign - --identifier "$label" "$binary" >/dev/null 2>&1 || true
+  chmod +x "$binary"
+fi
 
 # The stable UI is now the Polymarket SwiftBar item prefixed with 20/20 state.
 # Remove any standalone 20/20 status item so macOS does not reorder/flicker items.
@@ -84,4 +88,5 @@ echo "State file:"
 echo "$state_path"
 echo
 echo "If F6 is not detected, grant Accessibility permission to twenty20-watcher"
-echo "or to the terminal app that installed it, then rerun this script."
+echo "or to the terminal app that installed it, then restart the watcher:"
+echo "launchctl kickstart -k gui/$UID/$label"

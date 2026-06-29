@@ -57,10 +57,16 @@ How it works:
 - After the 20 seconds completes, the watcher flashes all screens white briefly as confirmation.
 - The Polymarket dropdown shows the required count, registered count, active time, and idle state before the market details.
 
-The watcher may need Accessibility permission so it can listen for the F6 / Do Not Disturb key globally. If the menu says the event tap is unavailable, grant Accessibility permission to `twenty20-watcher` or to the terminal app that installed it, then rerun:
+The watcher may need Accessibility permission so it can listen for the F6 / Do Not Disturb key globally. If the menu says the event tap is unavailable, grant Accessibility permission to the installed `twenty20-watcher` binary:
 
 ```sh
-./scripts/install-twenty20.sh
+open -R "$HOME/Library/Application Support/polymarket-toolbar/twenty20-watcher"
+```
+
+In System Settings > Privacy & Security > Accessibility, remove any old `twenty20-watcher` row, add the revealed binary again, and enable it. Then restart the watcher without rebuilding it:
+
+```sh
+launchctl kickstart -k "gui/$UID/com.arthurconmy.twenty20-watcher"
 ```
 
 If F6 still toggles Focus/DnD, click the toolbar item after pressing F6 once and look for `Last event: systemDefined keyType=N ...`. Then reinstall with that key type pinned:
