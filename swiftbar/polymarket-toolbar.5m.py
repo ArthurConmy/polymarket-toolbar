@@ -12,6 +12,7 @@ import math
 import os
 from pathlib import Path
 import re
+import socket
 import struct
 import subprocess
 import sys
@@ -116,6 +117,39 @@ def fetch_json(url, timeout=12):
     )
     with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.loads(response.read().decode("utf-8"))
+
+
+def dns_resolution_summary(hosts):
+    parts = []
+    seen = set()
+    for host in hosts:
+        if not host or host in seen:
+            continue
+        seen.add(host)
+        try:
+            ips = sorted(set(socket.gethostbyname_ex(host)[2]))
+        except OSError:
+            continue
+        if ips:
+            parts.append(f"{host}->{','.join(ips[:3])}")
+    return "; ".join(parts)
+
+
+def summarize_fetch_error(error):
+    text = str(error)
+    if "CERTIFICATE_VERIFY_FAILED" in text and "self signed certificate" in text:
+        hosts = [
+            urllib.parse.urlparse(base).hostname
+            for base in (CLOB, GAMMA)
+        ]
+        summary = dns_resolution_summary(hosts)
+        if summary:
+            return (
+                "network/DNS filter likely: "
+                f"{summary}; TLS saw a self-signed certificate, using stale cache"
+            )
+        return "TLS saw a self-signed certificate; likely network/DNS filter, using stale cache"
+    return text
 
 
 def url_with_query(base, params):
@@ -878,7 +912,7 @@ def fetch_all(specs, config, cache):
                 cached = dict(cached)
                 cached["stale"] = True
                 display[spec["key"]] = cached
-            errors.append(f"{spec['bar']}: {exc}")
+            errors.append(f"{spec['bar']}: {summarize_fetch_error(exc)}")
 
     return display, errors, fresh_count
 
