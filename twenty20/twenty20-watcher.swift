@@ -51,6 +51,7 @@ struct State: Codable {
 
 final class Twenty20Watcher {
     private let stateURL: URL
+    private let registerRequestURL: URL
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     private let isoFormatter: ISO8601DateFormatter
@@ -65,6 +66,8 @@ final class Twenty20Watcher {
 
     init(statePath: String) {
         stateURL = URL(fileURLWithPath: (statePath as NSString).expandingTildeInPath)
+        registerRequestURL = stateURL.deletingLastPathComponent()
+            .appendingPathComponent("register-request")
         holdKeyCodes = Twenty20Watcher.parseHoldKeyCodes(
             ProcessInfo.processInfo.environment["TWENTY20_HOLD_KEY_CODES"]
         )
@@ -186,8 +189,18 @@ final class Twenty20Watcher {
             state.activeSecondsToday += delta
         }
         state.requiredBreaksToday = Int(floor(state.activeSecondsToday / activeBucketSeconds))
+        consumeRegisterRequestIfNeeded()
         lastTick = now
         save()
+    }
+
+    private func consumeRegisterRequestIfNeeded() {
+        guard FileManager.default.fileExists(atPath: registerRequestURL.path) else {
+            return
+        }
+        try? FileManager.default.removeItem(at: registerRequestURL)
+        registerBreak(source: "registered 20/20/20 via menu")
+        flashWhite()
     }
 
     private func systemIdleSeconds() -> Double? {
@@ -257,7 +270,7 @@ final class Twenty20Watcher {
             if accessibilityTrusted {
                 state.lastError = "Event tap unavailable. Restart the watcher or reinstall the 20/20 extension."
             } else {
-                state.lastError = "Accessibility permission missing for Twenty20 Watcher.app."
+                state.lastError = "Keyboard hold needs Accessibility permission; menu registration still works."
             }
             save()
             return
@@ -268,7 +281,7 @@ final class Twenty20Watcher {
         CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
         state.eventTapEnabled = true
-        state.lastError = accessibilityTrusted ? nil : "Accessibility permission missing for Twenty20 Watcher.app."
+        state.lastError = accessibilityTrusted ? nil : "Keyboard hold needs Accessibility permission; menu registration still works."
         state.lastEvent = "watching hold keyCodes=\(holdKeyCodeList())"
         save()
     }
@@ -358,11 +371,11 @@ final class Twenty20Watcher {
         save()
     }
 
-    private func registerBreak() {
+    private func registerBreak(source: String = "registered 20/20/20") {
         resetForTodayIfNeeded()
         state.registeredBreaksToday += 1
         state.lastBreakAt = nowString()
-        state.lastEvent = "registered 20/20/20"
+        state.lastEvent = source
     }
 
     private func flashWhite() {

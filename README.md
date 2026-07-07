@@ -54,6 +54,7 @@ How it works:
 - The watcher counts active Mac time today, ignoring stretches where macOS reports the machine idle for more than 5 minutes.
 - Hold the configured break key for 20 seconds to register one 20/20/20. By default this is Right Option, reported by macOS as keyCode `61`.
 - After the 20 seconds completes, the watcher flashes all screens white briefly as confirmation.
+- If macOS does not deliver global keyboard events, the dropdown also has `Register 20/20 now`. This uses a local request file and does not require keyboard-monitoring permission.
 - The Polymarket dropdown shows the required count, registered count, active time, and idle state before the market details.
 
 To accept a different modifier key code, set `TWENTY20_HOLD_KEY_CODES` during install. For example, this accepts both Right Option and keyCode `56`:

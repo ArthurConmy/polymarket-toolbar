@@ -705,6 +705,13 @@ def safe_swiftbar_url(value):
     return text
 
 
+def safe_plain_param(value):
+    text = str(value)
+    if re.fullmatch(r"[-_./A-Za-z0-9]+", text):
+        return text
+    return None
+
+
 def parse_utc(value):
     return dt.datetime.fromisoformat(str(value).replace("Z", "+00:00"))
 
@@ -985,6 +992,14 @@ def twenty20_status(state):
         lines.append(f"Behind by {behind} 20/20/20 break(s) | color=#ef4444")
     else:
         lines.append("20/20 on pace | color=#10b981")
+    state_path = state.get("_path")
+    if state_path:
+        request_path = safe_plain_param(Path(state_path).with_name("register-request"))
+        if request_path:
+            lines.append(
+                "Register 20/20 now | "
+                f"bash=/usr/bin/touch param1={request_path} terminal=false refresh=true"
+            )
     if state.get("last_break_at"):
         lines.append(f"Last registered: {safe_label(state['last_break_at'])}")
     if state.get("hold_key_codes"):

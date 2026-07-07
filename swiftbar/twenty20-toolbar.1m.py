@@ -9,6 +9,7 @@ import datetime as dt
 import json
 import os
 from pathlib import Path
+import re
 
 
 STATE_PATH = Path(
@@ -26,6 +27,13 @@ def safe_label(value):
     ):
         text = text.replace(old, new)
     return " ".join(text.split())
+
+
+def safe_plain_param(value):
+    text = str(value)
+    if re.fullmatch(r"[-_./A-Za-z0-9]+", text):
+        return text
+    return None
 
 
 def load_state():
@@ -118,6 +126,12 @@ def main():
             print(f"Behind by {behind} 20/20/20 break(s) | color=#ef4444")
         else:
             print("On pace | color=#10b981")
+        request_path = safe_plain_param(STATE_PATH.with_name("register-request"))
+        if request_path:
+            print(
+                "Register 20/20 now | "
+                f"bash=/usr/bin/touch param1={request_path} terminal=false refresh=true"
+            )
         print(f"Last registered: {relative_time(state.get('last_break_at'))}")
         print(f"Watcher running: {'yes' if watcher_running(state) else 'no'}")
         print(f"Accessibility trusted: {'yes' if state.get('accessibility_trusted') else 'no'}")
